@@ -1,0 +1,42 @@
+{
+  "name": "geotrade-intelligence-platform",
+  "description": "AI-powered geopolitical trade intelligence platform for India — by Team Nakshatra, India Innovates 2026",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "author": "Team Nakshatra — Mumbai University | India Innovates 2026",
+  "license": "MIT",
+  "keywords": ["geopolitics", "trade", "india", "ai", "dashboard", "react"],
+  "scripts": {
+    "dev": "vite",
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives"
+  },
+  "dependencies": {
+    "d3-scale": "^4.0.2",
+    "lucide-react": "^0.577.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.13.1",
+    "react-simple-maps": "^3.0.0",
+    "recharts": "^3.8.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "@tailwindcss/vite": "^4.2.1",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "autoprefixer": "^10.4.27",
+    "eslint": "^9.13.0",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.14",
+    "globals": "^15.11.0",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^4.2.1",
+    "vite": "^5.4.10"
+  }
+}

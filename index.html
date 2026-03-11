@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Globe emoji favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌐</text></svg>" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- SEO -->
+    <title>GeoTrade | India Intelligence Platform</title>
+    <meta name="description" content="Real-time geopolitical risk mapping for Indian importers and exporters. Track global disruptions, sector risks, and export opportunities — powered by AI." />
+    <meta name="theme-color" content="#0F172A" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="GeoTrade Intelligence Platform" />
+    <meta property="og:description" content="AI-powered geopolitical trade intelligence for India — by Team Nakshatra." />
+    <meta property="og:type" content="website" />
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-[#0F172A]">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+
+    <!-- Service Worker registration (production only) -->
+    <script>
+      if ('serviceWorker' in navigator && !window.location.hostname.includes('localhost')) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {
+            // SW registration failed — app works fine without it
+          });
+        });
+      }
+    </script>
+  </body>
+</html>
