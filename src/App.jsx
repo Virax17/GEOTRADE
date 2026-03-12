@@ -13,11 +13,6 @@ import Sectors from './pages/Sectors';
 // Lazy-loaded heavy page
 const MarketPosition = lazy(() => import('./pages/MarketPosition'));
 
-// Dev-only checklist
-const DevChecklist = import.meta.env.DEV
-    ? lazy(() => import('./components/DevChecklist'))
-    : null;
-
 /* ─────────────────────────────────────────────────────────────────
    Page-level Suspense fallback — slim skeleton bar
 ───────────────────────────────────────────────────────────────── */
@@ -58,13 +53,6 @@ function App() {
                         </Route>
                     </Routes>
                 </BrowserRouter>
-
-                {/* Dev-only interactive checklist */}
-                {import.meta.env.DEV && DevChecklist && (
-                    <Suspense fallback={null}>
-                        <DevChecklist />
-                    </Suspense>
-                )}
             </StateProvider>
         </ErrorBoundary>
     );
