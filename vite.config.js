@@ -5,4 +5,13 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  optimizeDeps: {
+    include: ['leaflet', 'three'],
+    exclude: ['globe.gl'],
+  },
+  build: {
+    commonjsOptions: {
+      include: [/leaflet/, /node_modules/],
+    },
+  },
 })

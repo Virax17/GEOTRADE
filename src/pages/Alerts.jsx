@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useGlobalState } from '../GlobalState';
+import FilterPill from '../components/FilterPill';
 import {
     Search,
     Clock,
@@ -322,16 +323,13 @@ const AlertsPage = () => {
                 {/* Filter pills */}
                 <div className="flex gap-1.5 bg-slate-800/50 border border-white/5 p-1 rounded-xl flex-shrink-0">
                     {FILTERS.map(f => (
-                        <button
+                        <FilterPill
                             key={f.id}
+                            active={activeFilter === f.id}
                             onClick={() => setActiveFilter(f.id)}
-                            className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 whitespace-nowrap ${activeFilter === f.id
-                                    ? 'bg-slate-700 text-white shadow-md'
-                                    : `text-slate-500 hover:text-slate-300 hover:bg-slate-700/40`
-                                }`}
                         >
-                            {f.label}
-                        </button>
+                            <span className={f.color}>{f.label}</span>
+                        </FilterPill>
                     ))}
                 </div>
             </div>

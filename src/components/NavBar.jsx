@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Globe, Activity, TrendingUp, AlertOctagon, Info, LayoutDashboard, Menu, X } from 'lucide-react';
+import { Globe, Activity, TrendingUp, AlertOctagon, Info, LayoutDashboard, Menu, X, Loader2, RefreshCw } from 'lucide-react';
+import { useGlobalState } from '../GlobalState';
 
 const NavBar = () => {
+    const { isRefreshing, refreshData } = useGlobalState();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const links = [
@@ -65,6 +67,26 @@ const NavBar = () => {
                             </div>
                             LIVE MONITORING
                         </div>
+
+                        {/* Refresh Button */}
+                        <button 
+                            onClick={refreshData}
+                            disabled={isRefreshing}
+                            aria-label="Refresh intelligence data"
+                            className="hidden sm:flex items-center gap-2 px-4 py-2 bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/20 text-teal-400 rounded-full text-xs font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500/50 min-h-[44px]"
+                        >
+                            {isRefreshing ? (
+                                <>
+                                    <Loader2 size={16} className="animate-spin" />
+                                    Refreshing...
+                                </>
+                            ) : (
+                                <>
+                                    <RefreshCw size={16} />
+                                    Refresh Status
+                                </>
+                            )}
+                        </button>
 
                         {/* Hamburger button (Mobile) */}
                         <button

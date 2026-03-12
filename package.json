@@ -6,7 +6,14 @@
   "type": "module",
   "author": "Team Nakshatra — Mumbai University | India Innovates 2026",
   "license": "MIT",
-  "keywords": ["geopolitics", "trade", "india", "ai", "dashboard", "react"],
+  "keywords": [
+    "geopolitics",
+    "trade",
+    "india",
+    "ai",
+    "dashboard",
+    "react"
+  ],
   "scripts": {
     "dev": "vite",
     "start": "vite",
@@ -16,12 +23,16 @@
   },
   "dependencies": {
     "d3-scale": "^4.0.2",
+    "globe.gl": "^2.45.0",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.577.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-leaflet": "^4.2.1",
     "react-router-dom": "^7.13.1",
     "react-simple-maps": "^3.0.0",
-    "recharts": "^3.8.0"
+    "recharts": "^3.8.0",
+    "three": "^0.183.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",

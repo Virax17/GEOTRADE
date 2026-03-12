@@ -73,25 +73,7 @@ const MainLayout = () => {
                         )}
                     </div>
 
-                    {/* Refresh Button */}
-                    <button 
-                        onClick={refreshData}
-                        disabled={isRefreshing}
-                        aria-label="Refresh intelligence data"
-                        className="flex items-center gap-2 px-4 py-2 bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/20 text-teal-400 rounded-lg text-xs font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500/50"
-                    >
-                        {isRefreshing ? (
-                            <>
-                                <Loader2 size={13} className="animate-spin" />
-                                Refreshing intelligence...
-                            </>
-                        ) : (
-                            <>
-                                <RefreshCw size={13} />
-                                Refresh Status
-                            </>
-                        )}
-                    </button>
+
                 </div>
 
                 <Outlet />
