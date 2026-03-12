@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, CircleMarker, Polyline, Circle, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, Polyline, Circle, Marker, Popup, Polygon, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useGlobalState } from '../GlobalState';
@@ -411,37 +411,65 @@ const MapController = ({ target }) => {
 const MAP_SEA_ROUTES = [
   {
     id:'r1', name:'Mumbai → Suez Canal (Red Sea)', risk:'critical',
-    label:'⚠️ Disrupted — Houthi attacks via Red Sea',
-    points:[
-      [18.93,72.84],[12.8,54.0],[12.6,43.4],[15.5,43.5],
-      [22.0,38.0],[27.5,33.9],[30.0,32.6],[31.3,32.1],[36.2,14.0],
-    ],
+    label:'⚠️ DISRUPTED — Houthi attacks, rerouting via Cape',
+    points:[[18.93,72.84],[15.5,69.5],[12.5,57.0],[11.8,51.3],[11.5,45.0],[12.6,43.4],[14.5,42.8],[18.5,40.0],[22.0,37.5],[26.0,35.0],[28.5,33.2],[30.0,32.6],[31.3,32.3],[33.5,27.5],[36.5,22.0],[38.0,14.5]],
   },
   {
     id:'r2', name:'Mumbai → Singapore (Malacca Strait)', risk:'moderate',
     label:'⚠️ Elevated — South China Sea tensions',
-    points:[[18.93,72.84],[7.8,80.7],[5.0,96.0],[1.26,103.82],[1.35,103.82]],
+    points:[[18.93,72.84],[13.0,76.0],[9.0,78.5],[7.8,80.7],[4.0,84.0],[2.0,90.0],[1.26,103.82]],
   },
   {
-    id:'r3', name:'Mumbai via Cape of Good Hope (Alternate)', risk:'low',
-    label:'🔄 Alt Suez route — +14 days transit',
-    points:[[18.93,72.84],[10.0,60.0],[-2.0,44.0],[-15.0,35.0],[-34.3,18.5]],
+    id:'r3', name:'Mumbai → Cape of Good Hope (Alt Suez)', risk:'low',
+    label:'🔄 Active alternate — +14 days, Suez disruption diversion',
+    points:[[18.93,72.84],[12.0,64.0],[5.0,55.0],[-5.0,50.0],[-10.5,43.0],[-18.0,38.0],[-26.0,34.0],[-34.3,18.5],[-35.0,17.5],[-33.0,16.0]],
   },
   {
-    id:'r4', name:'Mumbai → Hormuz → Persian Gulf', risk:'critical',
-    label:'⚠️ Disrupted — Iranian tensions at Hormuz',
-    points:[[18.93,72.84],[22.0,62.0],[24.3,58.0],[26.35,56.45],[25.2,55.3],[26.2,50.6]],
+    id:'r4', name:'Mumbai → Strait of Hormuz → Persian Gulf', risk:'critical',
+    label:'⚠️ DISRUPTED — Iranian tensions, tanker movement restricted',
+    points:[[18.93,72.84],[21.0,65.5],[23.0,60.5],[24.3,58.3],[25.5,57.5],[26.35,56.45],[26.0,55.0],[25.2,55.3],[25.5,52.5],[26.2,50.6],[27.0,49.5]],
   },
   {
     id:'r5', name:'Kolkata → Bay of Bengal → Vietnam', risk:'moderate',
     label:'⚠️ South China Sea dispute risk',
-    points:[[22.5,88.3],[15.0,90.0],[5.0,100.0],[1.26,103.82],[10.8,106.7]],
+    points:[[22.5,88.3],[18.0,89.5],[13.0,90.5],[7.0,94.0],[4.0,99.0],[1.26,103.82],[4.0,106.0],[8.0,108.5],[10.8,106.7]],
   },
   {
     id:'r6', name:'Kochi → Colombo (Short Corridor)', risk:'stable',
-    label:'✅ Normal operations',
-    points:[[9.93,76.27],[6.9,79.86]],
+    label:'✅ Normal — Key India–Sri Lanka corridor',
+    points:[[9.93,76.27],[8.5,78.0],[7.8,80.2],[7.18,79.88]],
   },
+  {
+    id:'r7', name:'Chennai → Kolkata (Coastal)', risk:'stable',
+    label:'✅ Normal — East coast coastal shipping lane',
+    points:[[13.08,80.29],[14.5,80.3],[16.5,82.2],[17.72,83.3],[19.5,85.0],[20.3,86.7],[22.5,88.3]],
+  },
+  {
+    id:'r8', name:'Mumbai → Rotterdam (via Cape)', risk:'high',
+    label:'⚠️ Rerouting — Suez disruption adds transit cost',
+    points:[[18.93,72.84],[-34.3,18.5],[-30.0,10.0],[-15.0,0.0],[0.0,-5.0],[20.0,-18.0],[38.0,-10.0],[48.0,-6.0],[51.9,4.5]],
+  },
+];
+
+const PORTS = [
+  { id:'p1',  name:'JNPT Mumbai',        lat:18.93, lng:72.94, country:'India',       type:'major',    volume:'72M TEU',  note:'Largest container port in India. 55% of India container traffic.' },
+  { id:'p2',  name:'Chennai Port',       lat:13.08, lng:80.29, country:'India',       type:'major',    volume:'22M TEU',  note:'Second largest container port. Key automotive export hub.' },
+  { id:'p3',  name:'Mundra Port',        lat:22.84, lng:69.72, country:'India',       type:'major',    volume:'155M MT',  note:'Largest private port. Handles crude oil & coal imports.' },
+  { id:'p4',  name:'Haldia / Kolkata',   lat:22.03, lng:88.07, country:'India',       type:'major',    volume:'48M MT',   note:'East India gateway. Bangladesh corridor cargo.' },
+  { id:'p5',  name:'Visakhapatnam',      lat:17.72, lng:83.30, country:'India',       type:'major',    volume:'73M MT',   note:'Largest port by volume. Steel & bulk cargo hub.' },
+  { id:'p6',  name:'Kochi Port',         lat:9.96,  lng:76.27, country:'India',       type:'major',    volume:'30M MT',   note:'South India transit hub. Growing container terminal.' },
+  { id:'p7',  name:'Paradip',            lat:20.32, lng:86.61, country:'India',       type:'major',    volume:'118M MT',  note:'Key coal and iron ore import terminal.' },
+  { id:'p8',  name:'Ennore / Kamarajar', lat:13.32, lng:80.32, country:'India',       type:'major',    volume:'35M MT',   note:'Dedicated energy port — coal, LNG, crude oil.' },
+  { id:'p9',  name:'Port of Singapore',  lat:1.27,  lng:103.82,country:'Singapore',   type:'hub',      volume:'37M TEU',  note:'World 2nd busiest. Critical India-Asia transshipment hub.' },
+  { id:'p10', name:'Port of Shanghai',   lat:30.63, lng:122.06,country:'China',       type:'hub',      volume:'47M TEU',  note:'World busiest port. Key India-China trade gateway.' },
+  { id:'p11', name:'Jebel Ali (Dubai)',   lat:25.0,  lng:55.07, country:'UAE',         type:'hub',      volume:'14M TEU',  note:'Middle East hub. 70% of India-Gulf trade.' },
+  { id:'p12', name:'Port of Rotterdam',  lat:51.9,  lng:4.48,  country:'Netherlands', type:'hub',      volume:'15M TEU',  note:'Largest European port. India-EU trade gateway.' },
+  { id:'p13', name:'Colombo Port',       lat:6.94,  lng:79.87, country:'Sri Lanka',   type:'hub',      volume:'7M TEU',   note:'South Asia hub. 70% of cargo is India transshipment.' },
+  { id:'p14', name:'Port Klang',         lat:3.0,   lng:101.4, country:'Malaysia',    type:'hub',      volume:'13M TEU',  note:'Malacca Strait gateway. India-ASEAN hub.' },
+  { id:'p15', name:'Port Said (Suez)',   lat:31.25, lng:32.30, country:'Egypt',       type:'strategic',volume:'7M TEU',   note:'Suez Canal entry. DISRUPTED — Houthi rerouting.' },
+  { id:'p16', name:'Djibouti Port',      lat:11.6,  lng:43.15, country:'Djibouti',    type:'strategic',volume:'400K TEU', note:'Red Sea / Horn of Africa gateway. China base nearby.' },
+  { id:'p17', name:'Gwadar Port',        lat:25.12, lng:62.32, country:'Pakistan',    type:'strategic',volume:'growing',  note:'CPEC-funded. China control. Flanks India Arabian Sea.' },
+  { id:'p18', name:'Hambantota Port',    lat:6.10,  lng:81.12, country:'Sri Lanka',   type:'strategic',volume:'growing',  note:'Chinese 99yr lease. Flanks Bay of Bengal.' },
 ];
 const ROUTE_COLORS = { critical:'#ef4444', high:'#f97316', moderate:'#eab308', low:'#22c55e', stable:'#22c55e' };
 
@@ -496,12 +524,36 @@ const AIRPORTS = [
   { code:'CMB', name:'Colombo CMB',         lat:7.18,  lng:79.88, status:'hub',     note:'International hub — Sri Lanka transshipment' },
 ];
 
-const mapCategories = ['All', 'Trade', 'Shipping', 'Energy', 'Political', 'Routes', 'Chokepoints', 'Mil. Bases', 'Airspace'];
+const EEZ_ZONES = [
+  { id:'eez1', name:'India EEZ', country:'India', color:'#0d9488', fillOpacity:0.10,
+    note:"India's 2.37 million sq km EEZ under UNCLOS. Covers Arabian Sea, Bay of Bengal, Indian Ocean including Andaman & Nicobar and Lakshadweep.",
+    points:[[23.5,63.0],[22.0,60.0],[19.5,57.5],[16.5,58.5],[14.0,60.0],[12.0,62.0],[10.0,64.5],[8.5,68.0],[7.5,72.5],[6.5,74.5],[6.0,77.0],[5.5,80.0],[6.0,83.0],[7.0,86.0],[8.5,88.5],[10.5,90.5],[12.5,91.5],[14.0,93.0],[15.5,93.5],[17.5,92.5],[19.0,91.0],[20.5,90.0],[22.0,89.5],[23.0,89.0],[22.5,88.5],[21.5,87.0],[20.0,86.0],[19.0,84.5],[17.0,82.0],[15.0,80.0],[13.0,80.5],[11.0,79.5],[9.5,78.0],[8.0,77.5],[8.5,76.5],[10.0,75.5],[11.5,74.5],[14.0,74.0],[15.5,73.5],[17.0,72.5],[18.9,72.8],[20.5,72.5],[21.5,72.0],[22.5,69.5],[23.0,68.5],[23.5,66.0],[23.5,63.0]],
+  },
+  { id:'eez2', name:'China South China Sea Claim', country:'China', color:'#ef4444', fillOpacity:0.08,
+    note:"China's contested 9-dash line claim. Overlaps Vietnam, Philippines, Malaysia EEZs. Affects India-East Asia shipping.",
+    points:[[20.0,110.0],[18.5,113.0],[16.0,117.0],[14.0,117.5],[12.0,116.5],[10.0,115.0],[8.0,113.5],[5.5,112.0],[4.0,110.0],[4.5,107.5],[6.0,106.0],[8.0,106.5],[10.0,107.0],[12.0,109.0],[14.0,111.0],[16.5,111.0],[18.0,110.5],[20.0,110.0]],
+  },
+  { id:'eez3', name:'Pakistan EEZ', country:'Pakistan', color:'#f97316', fillOpacity:0.09,
+    note:"Pakistan's EEZ in Arabian Sea (290,000 sq km). Gwadar port expansion under CPEC changes maritime balance near India's western flank.",
+    points:[[23.5,63.0],[24.5,63.0],[25.5,64.0],[26.0,65.5],[25.5,67.0],[25.0,68.5],[24.5,67.5],[24.0,66.0],[23.5,63.0]],
+  },
+  { id:'eez4', name:'Sri Lanka EEZ', country:'Sri Lanka', color:'#eab308', fillOpacity:0.09,
+    note:"Sri Lanka's EEZ — 532,000 sq km. Colombo handles 70% India transshipment. Hambantota under Chinese 99yr lease.",
+    points:[[7.0,78.5],[8.5,78.0],[10.0,79.0],[10.5,81.0],[10.0,82.5],[8.5,83.5],[7.0,83.0],[5.5,82.0],[4.5,80.5],[5.0,78.5],[6.0,78.0],[7.0,78.5]],
+  },
+  { id:'eez5', name:'Australia EEZ (Indian Ocean)', country:'Australia', color:'#22c55e', fillOpacity:0.06,
+    note:"Australia's EEZ — world's 3rd largest. Quad partner. Controls southern Indian Ocean and critical LNG export lanes to India.",
+    points:[[-22.0,95.0],[-18.0,110.0],[-18.0,120.0],[-22.0,130.0],[-28.0,130.0],[-32.0,124.0],[-34.0,115.0],[-35.0,110.0],[-34.0,100.0],[-30.0,95.0],[-25.0,93.0],[-22.0,95.0]],
+  },
+];
+
+const mapCategories = ['All', 'Trade', 'Shipping', 'Energy', 'Political', 'Routes', 'Chokepoints', 'Mil. Bases', 'Airspace', 'Ports', 'EEZ'];
 
 const InteractiveMapSection = () => {
     const [filterCategory, setFilterCategory] = useState('All');
     const [activeEvent, setActiveEvent] = useState(null);
     const [mapMode, setMapMode] = useState('2d'); // '2d' | 'globe'
+    const [activeTab, setActiveTab] = useState('events'); // 'events' | 'stats'
     const listRef = useRef(null);
     const { activeAlerts } = useGlobalState();
 
@@ -512,11 +564,25 @@ const InteractiveMapSection = () => {
     const showChokepoints= filterCategory === 'All' || filterCategory === 'Chokepoints';
     const showBases      = filterCategory === 'Mil. Bases';
     const showAirspace   = filterCategory === 'Airspace';
-    const showEvents     = !['Routes','Chokepoints','Mil. Bases','Airspace'].includes(filterCategory);
-    const showAirports   = filterCategory === 'Airspace';
+    const showEvents     = !['Routes','Chokepoints','Mil. Bases','Airspace','EEZ','Ports'].includes(filterCategory);
+    const showAirports   = filterCategory === 'Airspace' || filterCategory === 'Shipping';
+    const showEEZ        = filterCategory === 'EEZ';
+    const showPorts      = filterCategory === 'All' || filterCategory === 'Ports' || filterCategory === 'Routes' || filterCategory === 'Shipping';
 
     const eventFilter = ['All','Trade','Shipping','Energy','Political'].includes(filterCategory) ? filterCategory : 'All';
     const filteredEvents = mapEvents.filter(ev => eventFilter === 'All' || ev.category === eventFilter);
+
+    // Calc stats
+    const statsCritical = filteredEvents.filter(e => e.severity === 'critical').length;
+    const statsHigh = filteredEvents.filter(e => e.severity === 'high').length;
+    const statsModerate = filteredEvents.filter(e => e.severity === 'moderate').length;
+    const statsLowOrStableRoutes = MAP_SEA_ROUTES.filter(r => r.risk === 'low' || r.risk === 'stable').length;
+    const sumSeverity = filteredEvents.reduce((acc, ev) => acc + (ev.severity === 'critical' ? 3 : ev.severity === 'high' ? 2 : 1), 0);
+    const scorePct = Math.min((sumSeverity / 30) * 100, 100);
+    const scoreColor = sumSeverity < 10 ? '#22c55e' : sumSeverity <= 20 ? '#f97316' : '#ef4444';
+
+    const catCounts = { Trade: 0, Shipping: 0, Energy: 0, Political: 0 };
+    filteredEvents.forEach(e => { if (catCounts[e.category] !== undefined) catCounts[e.category]++; });
 
     const handleEventClick = (ev) => {
         setActiveEvent(ev);
@@ -665,6 +731,46 @@ const InteractiveMapSection = () => {
                                     </Popup>
                                 </Circle>
                             ))}
+                            
+                            {/* ── EEZ Polygon boundaries (accurate UNCLOS shapes) */}
+                            {showEEZ && EEZ_ZONES.map(eez => (
+                                <Polygon key={eez.id}
+                                    positions={eez.points}
+                                    pathOptions={{ color: eez.color, fillColor: eez.color, fillOpacity: eez.fillOpacity, weight: 2, dashArray: '6 4', opacity: 0.85 }}
+                                >
+                                    <Popup className="dark-popup">
+                                        <div style={{background:'#0d1825',color:'#e2e8f0',padding:'8px 12px',borderRadius:'8px',fontSize:'11px',minWidth:'220px'}}>
+                                            <div style={{fontWeight:700,marginBottom:3}}>🌊 {eez.name}</div>
+                                            <div style={{color:eez.color,fontSize:10,fontWeight:600,marginBottom:4}}>EEZ · {eez.country.toUpperCase()} · UNCLOS 200nm</div>
+                                            <div style={{color:'#94a3b8',lineHeight:1.4}}>{eez.note}</div>
+                                        </div>
+                                    </Popup>
+                                </Polygon>
+                            ))}
+
+                            {/* ── Ports layer */}
+                            {showPorts && PORTS.map(p => {
+                                const clr  = p.type==='major'?'#0d9488':p.type==='hub'?'#38bdf8':'#f97316';
+                                const size = p.type==='hub' ? 22 : 18;
+                                return (
+                                <Marker key={p.id} position={[p.lat, p.lng]}
+                                    icon={L.divIcon({
+                                        className: '',
+                                        html: `<div style="width:${size}px;height:${size}px;border-radius:3px;background:${clr};border:2px solid rgba(255,255,255,0.8);display:flex;align-items:center;justify-content:center;font-size:9px;color:white;font-weight:900;box-shadow:0 0 8px ${clr}88;cursor:pointer;">⚓</div>`,
+                                        iconSize: [size, size], iconAnchor: [size/2, size/2],
+                                    })}
+                                >
+                                    <Popup className="dark-popup">
+                                        <div style={{background:'#0d1825',color:'#e2e8f0',padding:'8px 12px',borderRadius:'8px',fontSize:'11px',minWidth:'210px'}}>
+                                            <div style={{fontWeight:700,marginBottom:3}}>⚓ {p.name}</div>
+                                            <div style={{color:clr,fontSize:10,fontWeight:600,marginBottom:4}}>{p.type.toUpperCase()} PORT · {p.country.toUpperCase()}</div>
+                                            <div style={{color:'#94a3b8',lineHeight:1.4}}>{p.note}</div>
+                                            <div style={{color:'#64748b',fontSize:10,marginTop:4}}>Volume: {p.volume}</div>
+                                        </div>
+                                    </Popup>
+                                </Marker>
+                                );
+                            })}
 
                             {/* ── Airport Markers – proper Leaflet Markers at real lat/lng */}
                             {showAirports && AIRPORTS.map(ap => {
@@ -725,6 +831,9 @@ const InteractiveMapSection = () => {
                             <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-sky-400"></span>Allied base</span>
                             <span className="flex items-center gap-1.5"><span style={{color:'#22c55e'}}>✈</span>Open airport</span>
                             <span className="flex items-center gap-1.5"><span style={{color:'#ef4444'}}>✈</span>Closed/restricted</span>
+                            <span className="flex items-center gap-1.5"><span className="inline-block w-4 h-3 bg-teal-500/20 border border-teal-400 opacity-70"></span>Major port</span>
+                            <span className="flex items-center gap-1.5"><span className="inline-block w-4 h-3 bg-sky-500/20 border border-sky-400 opacity-70"></span>Int'l hub port</span>
+                            <span className="flex items-center gap-1.5"><span className="inline-block w-4 border-t-2 border-dashed border-teal-400 opacity-70"></span>EEZ boundary</span>
                         </div>
                     </div>
                     )}
@@ -740,7 +849,7 @@ const InteractiveMapSection = () => {
                                 </div>
                             </div>
                         }>
-                            <GlobeView onEventSelect={ev => {
+                            <GlobeView activeFilter={filterCategory} onEventSelect={ev => {
                                 handleEventClick(ev);
                             }} />
                         </Suspense>
@@ -748,50 +857,144 @@ const InteractiveMapSection = () => {
                     )}
                 </div>
 
-                {/* RIGHT: events sidebar */}
+                {/* RIGHT: events sidebar / stats */}
                 <div className="lg:w-[30%] h-full flex flex-col bg-[#0a111a] overflow-hidden">
-                    <div className="p-4 border-b border-[#1a2d42] flex justify-between items-center bg-[#0d1520]">
-                        <h3 className="text-sm font-bold text-white">Global Events</h3>
-                        <div className="bg-red-500 text-white text-[10px] font-black w-5 h-5 flex justify-center items-center rounded-sm">
-                            {filteredEvents.length}
-                        </div>
+                    <div className="p-0 border-b border-[#1a2d42] flex bg-[#0d1520] shrink-0">
+                        <button
+                            onClick={() => setActiveTab('events')}
+                            className={`flex-1 py-3 text-xs font-bold transition-colors border-b-2 ${activeTab === 'events' ? 'border-teal-500 text-white' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
+                        >
+                            Global Events <span className="ml-1.5 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-sm">{filteredEvents.length}</span>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('stats')}
+                            className={`flex-1 py-3 text-xs font-bold transition-colors border-b-2 ${activeTab === 'stats' ? 'border-teal-500 text-white' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
+                        >
+                            Statistics
+                        </button>
                     </div>
 
-                    {/* Info card for non-event selections */}
-                    {activeEvent?.type && ['chokepoint','base','airspace'].includes(activeEvent.type) && (
-                        <div className="m-2 p-3 rounded-lg border border-teal-500/30 bg-teal-500/5 text-xs">
-                            <div className="flex items-center justify-between mb-1">
-                                <span className="font-bold text-white">{activeEvent.flag} {activeEvent.name}</span>
-                                <button onClick={()=>setActiveEvent(null)} className="text-slate-500 hover:text-white">✕</button>
+                    {activeTab === 'events' ? (
+                        <>
+                            {/* Info card for non-event selections */}
+                            {activeEvent?.type && ['chokepoint','base','airspace'].includes(activeEvent.type) && (
+                                <div className="m-2 p-3 rounded-lg border border-teal-500/30 bg-teal-500/5 text-xs shrink-0">
+                                    <div className="flex items-center justify-between mb-1">
+                                        <span className="font-bold text-white">{activeEvent.flag} {activeEvent.name}</span>
+                                        <button onClick={()=>setActiveEvent(null)} className="text-slate-500 hover:text-white">✕</button>
+                                    </div>
+                                    <div className="text-slate-300 leading-relaxed">{activeEvent.note || activeEvent.desc || activeEvent.threat}</div>
+                                    {activeEvent.country && <div className="text-slate-500 mt-1">Country: {activeEvent.country}</div>}
+                                </div>
+                            )}
+
+                            <div className="flex-1 overflow-y-auto p-2 space-y-2" ref={listRef} style={{scrollBehavior:'smooth'}}>
+                                {filteredEvents.map(ev => {
+                                    const isSelected = activeEvent?.id === ev.id;
+                                    return (
+                                    <button key={ev.id} id={`event-list-item-${ev.id}`}
+                                        onClick={() => handleEventClick(ev)}
+                                        className={`group w-full text-left p-3 rounded-lg border-l-4 transition-all duration-300 text-sm cursor-pointer ${ isSelected ? 'bg-teal-500/10 border-teal-500' : 'bg-[#121c27] hover:bg-[#162332] border-transparent group-hover:border-teal-500/40'}`}
+                                    >
+                                        <div className="flex justify-between items-start mb-1 text-xs">
+                                            <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                                                <div className="shrink-0 w-2.5 h-2.5 rounded-full" style={{backgroundColor:severityColors[ev.severity]}}></div>
+                                                <div className="font-bold text-slate-200 truncate pr-2">{ev.country}</div>
+                                            </div>
+                                            <div className="text-slate-500 text-[10px] font-medium shrink-0">{ev.time}</div>
+                                        </div>
+                                        <div className="font-semibold text-white/90 mb-1">{ev.title}</div>
+                                        <div className="text-slate-400 text-[11px] leading-relaxed line-clamp-2">{ev.desc}</div>
+                                    </button>
+                                )})}
+                                {filteredEvents.length === 0 && (
+                                    <div className="p-6 text-center text-slate-500 text-sm italic">No events matching this filter.</div>
+                                )}
                             </div>
-                            <div className="text-slate-300 leading-relaxed">{activeEvent.note || activeEvent.desc || activeEvent.threat}</div>
-                            {activeEvent.country && <div className="text-slate-500 mt-1">Country: {activeEvent.country}</div>}
+                        </>
+                    ) : (
+                        <div className="flex-1 overflow-y-auto p-4 space-y-5 text-sm text-slate-300">
+                            {/* 1. DISRUPTION SUMMARY */}
+                            <div>
+                                <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Disruption Summary</h4>
+                                <div className="flex justify-between items-center mb-2">
+                                    <div className="text-2xl font-black text-white">{filteredEvents.length} <span className="text-xs text-slate-500 font-medium">Active Events</span></div>
+                                </div>
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div className="bg-[#121c27] p-2 rounded border border-[#1a2d42] text-center">
+                                        <div className="text-[#ef4444] font-bold text-lg">{statsCritical}</div><div className="text-[9px] text-slate-400">CRITICAL</div>
+                                    </div>
+                                    <div className="bg-[#121c27] p-2 rounded border border-[#1a2d42] text-center">
+                                        <div className="text-[#f97316] font-bold text-lg">{statsHigh}</div><div className="text-[9px] text-slate-400">HIGH</div>
+                                    </div>
+                                    <div className="bg-[#121c27] p-2 rounded border border-[#1a2d42] text-center">
+                                        <div className="text-[#eab308] font-bold text-lg">{statsModerate}</div><div className="text-[9px] text-slate-400">MODERATE</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 5. INDIA IMPACT SCORE */}
+                            <div className="bg-[#121c27] p-3 rounded-lg border border-[#1a2d42]">
+                                <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">India Trade Risk Score</h4>
+                                <div className="flex items-end gap-2 mb-2">
+                                    <div className="text-3xl font-black leading-none" style={{color:scoreColor}}>{sumSeverity}</div>
+                                    <div className="text-xs text-slate-500 mb-1">/ 30 severity index</div>
+                                </div>
+                                <div className="h-2 bg-[#050a14] rounded-full overflow-hidden">
+                                    <div className="h-full transition-all duration-1000" style={{width:`${scorePct}%`, backgroundColor:scoreColor}}></div>
+                                </div>
+                            </div>
+
+                            {/* 2. TRADE ROUTE HEALTH */}
+                            <div>
+                                <div className="flex justify-between items-end mb-3">
+                                    <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Trade Route Health</h4>
+                                    <div className="text-[10px] font-bold text-slate-400">{Math.round((statsLowOrStableRoutes / MAP_SEA_ROUTES.length) * 100)}% Stable</div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    {MAP_SEA_ROUTES.map(r => (
+                                        <div key={r.id} className="flex justify-between items-center text-[11px] bg-[#121c27] px-2.5 py-1.5 rounded">
+                                            <span className="truncate pr-2 font-medium text-slate-300">{r.name}</span>
+                                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${r.risk==='critical'?'bg-red-500/20 text-red-500': r.risk==='moderate'?'bg-orange-500/20 text-orange-500': 'bg-green-500/20 text-green-500'}`}>{r.risk.toUpperCase()}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* 3. CATEGORY BREAKDOWN */}
+                            <div>
+                                <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Category Breakdown</h4>
+                                <div className="space-y-2">
+                                    {Object.entries(catCounts).map(([cat, count]) => {
+                                        const pct = filteredEvents.length ? (count / filteredEvents.length) * 100 : 0;
+                                        return (
+                                        <div key={cat} className="text-[11px]">
+                                            <div className="flex justify-between mb-1"><span className="text-slate-400">{cat}</span><span className="font-bold text-slate-200">{count}</span></div>
+                                            <div className="h-1.5 bg-[#121c27] rounded-full overflow-hidden">
+                                                <div className="h-full bg-teal-500" style={{width:`${pct}%`}}></div>
+                                            </div>
+                                        </div>
+                                    )})}
+                                </div>
+                            </div>
+
+                            {/* 4. CHOKEPOINT STATUS */}
+                            <div>
+                                <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Chokepoint Status</h4>
+                                <div className="space-y-2">
+                                    {MAP_CHOKEPOINTS.slice(0,4).map(cp => (
+                                        <div key={cp.id} className="text-[10px] bg-[#121c27] p-2 rounded border-l-2" style={{borderColor:cp.risk==='critical'?'#ef4444':cp.risk==='high'?'#f97316':'#eab308'}}>
+                                            <div className="flex justify-between font-bold text-slate-200 mb-0.5">
+                                                <span>{cp.flag} {cp.name}</span>
+                                                <span style={{color:cp.risk==='critical'?'#ef4444':cp.risk==='high'?'#f97316':'#eab308'}}>{cp.risk.toUpperCase()}</span>
+                                            </div>
+                                            <div className="text-slate-400 truncate">{cp.note}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     )}
-
-                    <div className="flex-1 overflow-y-auto p-2 space-y-2" ref={listRef} style={{scrollBehavior:'smooth'}}>
-                        {filteredEvents.map(ev => {
-                            const isSelected = activeEvent?.id === ev.id;
-                            return (
-                            <button key={ev.id} id={`event-list-item-${ev.id}`}
-                                onClick={() => handleEventClick(ev)}
-                                className={`group w-full text-left p-3 rounded-lg border-l-4 transition-all duration-300 text-sm cursor-pointer ${ isSelected ? 'bg-teal-500/10 border-teal-500' : 'bg-[#121c27] hover:bg-[#162332] border-transparent group-hover:border-teal-500/40'}`}
-                            >
-                                <div className="flex justify-between items-start mb-1 text-xs">
-                                    <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                                        <div className="shrink-0 w-2.5 h-2.5 rounded-full" style={{backgroundColor:severityColors[ev.severity]}}></div>
-                                        <div className="font-bold text-slate-200 truncate pr-2">{ev.country}</div>
-                                    </div>
-                                    <div className="text-slate-500 text-[10px] font-medium shrink-0">{ev.time}</div>
-                                </div>
-                                <div className="font-semibold text-white/90 mb-1">{ev.title}</div>
-                                <div className="text-slate-400 text-[11px] leading-relaxed line-clamp-2">{ev.desc}</div>
-                            </button>
-                        )})}
-                        {filteredEvents.length === 0 && (
-                            <div className="p-6 text-center text-slate-500 text-sm italic">No events matching this filter.</div>
-                        )}
-                    </div>
                 </div>
             </div>
         </div>
